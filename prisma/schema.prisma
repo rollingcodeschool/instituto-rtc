@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -14,28 +14,28 @@ datasource db {
 }
 
 model Alumno {
-  id Int @id @default(autoincrement())
-  nombre String
-  apellido String
-  email String @unique
-  telefono String?
-  fechaCreacion DateTime @default(now())
-  fechaActualizacion DateTime @updatedAt 
-  cursos Curso[]
+  id                 Int      @id @default(autoincrement())
+  nombre             String
+  apellido           String
+  email              String   @unique
+  telefono           String?
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+  cursos             Curso[]
 }
 
-model Curso{
-  id Int @id @default(autoincrement())
-  nombre String @unique
-  alumnos Alumno[]
-  profesor Profesor? @relation(fields: [profesorId], references: [id])
+model Curso {
+  id         Int       @id @default(autoincrement())
+  nombre     String    @unique
+  alumnos    Alumno[]
+  profesor   Profesor? @relation(fields: [profesorId], references: [id])
   profesorId Int?
 }
 
-model Profesor{
-  id Int @id @default(autoincrement())
-  nombre String
+model Profesor {
+  id       Int     @id @default(autoincrement())
+  nombre   String
   apellido String
-  email String @unique
-  cursos Curso[]
+  email    String  @unique
+  cursos   Curso[]
 }
