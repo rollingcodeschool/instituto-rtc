@@ -1,21 +1,37 @@
-export const agregarProfesor = async(prisma, nombre, apellido, email, curso)=>{
-    const actualizarCurso =await prisma.curso.update({
-        where:{
-            nombre:curso
-        },
-        data:{
-            profesor:{
-                create:{
-                    nombre,
-                    apellido,
-                    email
-                }
-            }
-        },
-        include:{
-            profesor:true
-        }
-    })
+import { prisma } from "../config/db.js";
 
-    console.log(`Profesor ${actualizarCurso.profesor.nombre}, ${actualizarCurso.profesor.apellido} fue agregado al curso ${actualizarCurso.nombre}`);
-}
+export const crearProfesorService = async (datosProfesor) => {
+  if (
+    datosProfesor.nombre.trim().toLowerCase() ===
+    datosProfesor.apellido.trim().toLowerCase()
+  ) {
+    throw new Error(
+      "El nombre y el apellido del profesor no pueden ser idénticos",
+    );
+  }
+  const nuevoProfesor = await prisma.profesor.create({
+    data: datosProfesor,
+  });
+
+  return nuevoProfesor;
+};
+
+export const obtenerProfesoresService = async () => {
+  const profesoresConsultados = await prisma.profesor.findMany();
+  return profesoresConsultados;
+};
+
+export const actualizarProfesorService = async (id, datosProfesor) => {
+  const profesorActualizado = await prisma.profesor.update({
+    where: { id: parseInt(id) },
+    data: datosProfesor,
+  });
+  return profesorActualizado;
+};
+
+export const eliminarProfesorService = async (id) => {
+  const profesorEliminado = await prisma.profesor.delete({
+    where: { id: parseInt(id) },
+  });
+  return profesorEliminado;
+};

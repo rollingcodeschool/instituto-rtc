@@ -1,41 +1,70 @@
-export const crearCursos = async (prisma) => {
-  const listaCursos = await prisma.curso.createMany({
-    data: [
-      { nombre: "Despliegue con Docker" },
-      { nombre: "Arquitectura REST" },
-      { nombre: "Git y GitHub Avanzado" },
-    ],
-    skipDuplicates: true,
-  });
-  console.log("Catálogo de Cursos creado.", listaCursos);
-};
+import { prisma } from "../config/db.js";
 
-export const leerCursos = async (prisma) => {
-  const cursos = await prisma.curso.findMany();
-  console.log("Lista de Cursos:", cursos);
-};
+export const crearCursoService = async (datosCurso) => {
+  if (datosCurso.nombre === undefined || datosCurso.nombre === null) {
+    throw new Error("El nombre del curso es obligatorio.");
+  }
+  if (datosCurso.cupo === undefined || datosCurso.cupo === null) {
+    throw new Error("El cupo del curso es obligatorio.");
+  }
+  const cupoNumero = Number(datosCurso.cupo);
+  if (isNaN(cupoNumero) || typeof datosCurso.cupo !== "number") {
+    throw new Error("El cupo debe ser un número.");
+  } else if (cupoNumero <= 0) {
+    throw new Error("El cupo debe ser mayor a cero.");
+  }
 
-export const datosCursoCompleto = async (prisma, nombreCurso) => {
-  const datosCurso = await prisma.curso.findUnique({
-    where: {
-      nombre: nombreCurso,
+  const nuevoCurso = await prisma.curso.create({
+    data: {
+      ...datosCurso,
+      nombre: datosCurso.nombre.toLowerCase().trim(),
+      cupo: cupoNumero,
     },
-    include: {
-      profesor: true,
+  });
+  return nuevoCurso;
+};
+
+export const obtenerCursosService = async () => {
+  const cursos = await prisma.curso.findMany();
+  return cursos;
+};
+
+export const detallesCursoService = async (nombreCurso) => {
+  if (!nombreCurso)
+    throw new Error("Ingresa el nombre del curso para poder obtener sus datos");
+
+  const datosCurso = await prisma.curso.findFirst({
+    where: {
+      nombre: {
+        equals: nombreCurso.trim(),
+        mode: "insensitive",
+      },
+    },
+    select: {
+      nombre: true,
+      cupo: true,
+
+      profesor: { select: { id: true, nombre: true, email: true } },
       alumnos: {
-        select: { nombre: true, apellido: true },
+        select: { nombre: true, apellido: true, email: true },
       },
     },
   });
+  if (!datosCurso) throw new Error("No se encontro el curso con ese nombre.");
+  return datosCurso;
+};
 
-  console.log(`Datos del curso ${nombreCurso}`);
+export const actualizarCursoService = async (id, datosCurso) => {
+  const cursoActualizado = await prisma.curso.update({
+    where: { id: parseInt(id) },
+    data: datosCurso,
+  });
+  return cursoActualizado;
+};
 
-  if(!datosCurso){
-    console.log(`No se encontró el curso ${nombreCurso}`);
-    return;
-  }
-  console.log(`\n 📚 Curso: ${nombreCurso}`)
-  console.log(`👨‍🏫 Profesor: ${datosCurso.profesor.nombre}, ${datosCurso.profesor.apellido}`);
-  console.log(`👥 Alumnos inscritos:`)
-  console.table(datosCurso.alumnos);
+export const eliminarCursoService = async (id) => {
+  await prisma.curso.delete({
+    where: { id: parseInt(id) },
+  });
+  return;
 };
